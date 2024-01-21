@@ -1,0 +1,26 @@
+# run before pytest on localhost
+export GW_HOST="http://localhost:3100"
+export APP_KEY="rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs"
+export APP_SECRET="AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA"
+export MASTER_TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST http://localhost:3100/oauth/token | jq -r '.access_token'`
+echo '{"name":"test_org"}' | curl -H "Content-Type: application/json" -H "Authorization: Bearer $MASTER_TOKEN" -d @- -X POST $GW_HOST/organization/
+USER_KEY=$(curl -s -H "Authorization: Bearer $MASTER_TOKEN" $GW_HOST/user/`echo '{"name":"test_org"}' | curl -s -H "Content-Type: application/json" -H "Authorization: Bearer $MASTER_TOKEN" -d @- -X POST $GW_HOST/organization/ | jq -r '."admin-user-id"'`/wallet | jq -r '.oauth."client-id"'); USER_SECRET=$(curl -s -H "Authorization: Bearer $MASTER_TOKEN" $GW_HOST/user/`echo '{"name":"test_org"}' | curl -s -H "Content-Type: application/json" -H "Authorization: Bearer $MASTER_TOKEN" -d @- -X POST $GW_HOST/organization/ | jq -r '."admin-user-id"'`/wallet | jq -r '.oauth."client-secret"'); export USER_TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$USER_KEY -d client_secret=$USER_SECRET -d scope=write -X POST $GW_HOST/oauth/token | jq -r '.access_token'`
+cd ../pytest
+pytest
+cd ../test
+
+cat service.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $USER_TOKEN" -d @- -X POST http://localhost:3100/service/
+
+curl -s http://localhost:3100/service/8
+
+cat service.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d @- -X PUT http://localhost:3100/service/4
+
+curl -H "Authorization: Bearer $USER_TOKEN" -X DELETE http://localhost:3100/service/8
+
+for i in {1..30}; do curl -H "Content-Type: application/json" -H "Authorization: Bearer $USER_TOKEN" -d "{\"interface\":{\"info\":{\"title\":\"service_$i\"}},\"data\":null,\"governance\":null}" -X POST http://localhost:3100/service; done
+
+curl "http://localhost:3100/list?page=2&items=2&sort=name"
+
+curl "http://localhost:3100/service/search?title=dummy"
+
+curl http://localhost:3100/service/5

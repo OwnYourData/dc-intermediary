@@ -1,0 +1,24 @@
+{
+    "beekeeper_did": "did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net",
+    "produced_at": "2023-02-14",
+    "volume": 2.5,
+    "unit": "kg",
+    "wanderkarte": {
+        "location": {
+            "address": "Burggarten",
+            "polygon": [
+                {
+                    "latitude": 45.2,
+                    "longitude": 16.8
+                },
+                {
+                    "latitude": 45.2,
+                    "longitude": 16.8
+                }
+            ]
+        }
+    },
+    "meta": {
+        "d2a": "https://babelfish.data-container.net/presentations/zQmXQGbR6ifZ7pDCETj9zocFRxkhaDGDBS2qDRXGaCTxPSw"
+    }
+}

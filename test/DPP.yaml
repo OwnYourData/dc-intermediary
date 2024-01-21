@@ -1,0 +1,37 @@
+meta:
+  name: Honey_DPP
+
+content:
+  bases: 
+    - name: Passport
+      attributes:
+        product: String
+        product_did: String
+        origin: String
+        origin_did: String
+        transport: String
+        transport_did: String
+        market: String
+        market_did: String
+  overlays: 
+    - type: OverlayTransformation
+      name: HoneyTransformationOverlay
+      base: Honey
+      engine: handlebars
+      value:
+        origin: "{{migration.location}}" 
+        product_did: "{{beekeeper_did}}"
+    - type: OverlayTransformation
+      name: TransportTransformationOverlay
+      base: Transport
+      engine: handlebars
+      value:
+        origin: "{{company}}" 
+        product_did: "{{TSR_did}}"
+    - type: OverlayTransformation
+      name: MarketTransformationOverlay
+      base: Market
+      engine: handlebars
+      value:
+        origin: "{{shop_name}}" 
+        product_did: "{{market_did}}"

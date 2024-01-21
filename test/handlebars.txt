@@ -1,0 +1,151 @@
+Template: ------------------
+
+{
+  "data-subject":{
+    "@context":{
+      "@version":1.1,
+      "@vocab":"https://soya.data-container.net/SCM_UsagePolicy/",
+      "dpvo":"https://w3id.org/dpv/dpv-owl#",
+      "scdv":"https://w3id.org/scdv/v1#",
+      "dpvo:hasPurpose":{
+        "@type":"@id"
+      },
+      "dpvo:hasProcessing":{
+        "@type":"@id"
+      },
+      "dpvo:hasRecipient":{
+        "@type":"@id"
+      },
+      "dpvo:hasLocation":{
+        "@type":"@id"
+      },
+      "dpvo:hasExpiryTime":{
+        "@type":"http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    },
+    "@graph":[
+      {
+"dpvo:hasPurpose": {{#each verifiableCredential}}{{#each this.credentialSubject.purposes}}[{{#each this.purpose}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]{{/each}}{{/each}},
+"dpvo:hasProcessing": {{#each verifiableCredential}}{{#each this.credentialSubject.purposes}}[{{#each this.processing}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]{{/each}}{{/each}},
+"dpvo:hasRecipient": {{#each verifiableCredential}}{{#each this.credentialSubject.purposes}}[{{#each this.recipient}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]{{/each}}{{/each}},
+"dpvo:hasLocation": {{#each verifiableCredential}}{{#each this.credentialSubject.purposes}}[{{#each this.storage_location}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]{{/each}}{{/each}},
+"dpvo:hasExpiryTime": "1970-06-01T01:00:00"
+      }
+    ]
+  }
+}
+
+
+Input: ------------------
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2"
+  ],
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "verifiableCredential": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/credentials/v2"
+      ],
+      "type": [
+        "VerifiableCredential"
+      ],
+      "issuer": "did:oyd:zQmbp9vm7VszVUj1gwGrsvZX5uHiXeFw2jsCbTRwDd5SYxp%40babelfish.data-container.net",
+      "issuanceDate": "2023-05-30T09:35:31Z",
+      "credentialSubject": {
+        "id": "did:oyd:zQmbp9vm7VszVUj1gwGrsvZX5uHiXeFw2jsCbTRwDd5SYxp%40babelfish.data-container.net",
+        "purposes": [
+          {
+            "purpose": [
+              "scdv:green_claim",
+              "scdv:supply_chain_facilitation"
+            ],
+            "service": "Honey Production",
+            "recipient": [
+              "scdv:authority",
+              "scdv:data_space"
+            ],
+            "processing": [
+              "scdv:store",
+              "scdv:query"
+            ],
+            "data_source": [
+              {
+                "name": "Imkerei Hans Huber",
+                "address": "Street 1, A-1010 Vienna",
+                "party_type": "Ministry of Agriculture",
+                "organization_id": "did:oyd:zQmcHfufF5xtjhgqDbXmWeSSd2WKoncQC1S4dajk8eNnPM5%40babelfish.data-container.net"
+              }
+            ],
+            "jurisdiction": "Vienna, Austria",
+            "authority_party": "Austrian Chamber of Commerce",
+            "cii_information": [
+              {
+                "sensitivity": "none",
+                "attribute_id": "https://soya.ownyourdata.eu/Honey:Honey.beekeeper_did",
+                "attribute_type": [
+                  "scdv:identity"
+                ]
+              },
+              {
+                "sensitivity": "csi",
+                "attribute_id": "https://soya.ownyourdata.eu/Honey:Honey.Volume",
+                "attribute_type": [
+                  "scdv:agricultural"
+                ]
+              },
+              {
+                "sensitivity": "csi",
+                "attribute_id": "https://soya.ownyourdata.eu/Honey:BeeMigration.location",
+                "data_optional": true,
+                "attribute_type": [
+                  "scdv:agricultural"
+                ]
+              }
+            ],
+            "retention_period": "6 months",
+            "storage_location": [
+              "scdv:EU"
+            ],
+            "data_intermediary": [
+              {
+                "name": "DISP",
+                "address": "Street 2, A-1010 Vienna",
+                "party_type": "Chamber of Commerce",
+                "organization_id": "did:oyd:zQmbp9vm7VszVUj1gwGrsvZX5uHiXeFw2jsCbTRwDd5SYxp%40babelfish.data-container.net"
+              }
+            ],
+            "withdrawal_method": "contact via email",
+            "purpose_description": "Beekeeper Data Sharing",
+            "geographic_restriction": "EEA"
+          }
+        ]
+      },
+      "proof": [
+        {
+          "type": "Ed25519Signature2020",
+          "verificationMethod": "did:oyd:zQmcHfufF5xtjhgqDbXmWeSSd2WKoncQC1S4dajk8eNnPM5%40babelfish.data-container.net",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z2z2BuxdrcPGmE3gDwUAe1XBurbdxykUPjvPFqdigTS1Bj8Ls5SP755qLeLBdvoW5wgs9sLbQS1PUyHHZMgrtwntf"
+        },
+        {
+          "type": "Ed25519Signature2020",
+          "verificationMethod": "did:oyd:zQmbp9vm7VszVUj1gwGrsvZX5uHiXeFw2jsCbTRwDd5SYxp%40babelfish.data-container.net",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z2SKapVFDQTrAVm7jTN3gm58gX79Ud9FnwjGq65X7xrzsx8P6PhVJJLgE8awQPp5NwVxiw4i3F3gCGFcgHm3tPXkr"
+        }
+      ],
+      "identifier": "https://babelfish.data-container.net/credentials/zQmYVp1d8MWi2ZQDpCYVfzzp4awqczCDHQCuiMLecoiaovW"
+    }
+  ],
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2023-05-30T10:39:51Z",
+    "verificationMethod": "did:oyd:zQmbp9vm7VszVUj1gwGrsvZX5uHiXeFw2jsCbTRwDd5SYxp%40babelfish.data-container.net",
+    "proofPurpose": "authentication",
+    "proofValue": "z3r9rhD1nuLPBvqEambUdBXK876WJvD6hqoLrZAbgpgrj8m1YHfxWUZAdizHvpHsWG4NsuEQAYYgTkKpeHe39VR6d"
+  },
+  "identifier": "https://babelfish.data-container.net/presentations/zQmT896wxgRALaxGwaBXXZ9PgyaeGvvY5ipZkJHvUDdxEXh"
+}

@@ -1,0 +1,31 @@
+# PYTEST PREP
+export APP_KEY="rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs"
+export APP_SECRET="AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA"
+export MASTER_TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST http://localhost:3100/oauth/token | jq -r '.access_token'`
+
+# unauthorized access
+cat org.json | curl -H "Content-Type: application/json" -d @- -X POST http://localhost:3100/organization/
+
+# create Doorkeeper entry
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+
+export APP_KEY="rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs"
+export APP_SECRET="AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA"
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST http://localhost:3100/oauth/token | jq -r '.access_token'`
+cat org.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d @- -X POST http://localhost:3100/organization/
+
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3100/user/2
+export APP_KEY="w76IhupHXHEMk_2ueVwLrKL4Lcw0OKrBYoG9xq3cEFc"
+export APP_SECRET="c6XNWeHwmDh8e7yl624Ss4QxrNz6Rxm97R3R3Y7iRqY"
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=write -X POST http://localhost:3100/oauth/token | jq -r '.access_token'`
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3100/organization/1/
+
+
+Doorkeeper::Application.create!(name: "ACME Inc.", scopes: "read write", redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', organization_id: 1, uid: "CnuWxUibYzGkZ4E1keAn6qdpYuAEGf3eaY9YzlGdafg", secret: "46Xnq27BKoR42_onTbOHUs_4iPH9Qfsk7WxGfwlaejE")
+Doorkeeper::Application.last.uid
+Doorkeeper::Application.last.secret
+
+export APP_KEY="CnuWxUibYzGkZ4E1keAn6qdpYuAEGf3eaY9YzlGdafg"
+export APP_SECRET="46Xnq27BKoR42_onTbOHUs_4iPH9Qfsk7WxGfwlaejE"
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=write -X POST http://localhost:3100/oauth/token | jq -r '.access_token'`
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3100/organization/1/

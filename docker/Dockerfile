@@ -1,0 +1,17 @@
+FROM oydeu/dc-base
+MAINTAINER "Christoph Fabianek" christoph@ownyourdata.eu
+
+RUN apt-get update && \
+	apt-get install -y --no-install-recommends \
+		curl \
+		npm && \
+	curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
+	apt -y install nodejs && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN npm init -y && npm i web3@1.10.0
+COPY . .
+RUN bundle install && bundle update
+
+CMD ["./script/init.sh"]
+
+EXPOSE 3000

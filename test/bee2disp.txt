@@ -1,0 +1,161 @@
+# Prerequisite OAuth2
+Doorkeeper::Application.create!({name: 'master', uid: 'rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs', secret: 'AoaoR9-Aj7woafUW7hnARWVbNqaBxI
+NiqteyMDMuBoA', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'admin write read'})
+
+Doorkeeper::Application.create!({name: 'oydid', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'write read'})
+
+Doorkeeper::Application.create!({name: 'oydid-vc', redirect_uri: 'urn:ietf:wg:oauth:2.0:oob', scopes: 'read'})
+
+
+# Create Stakeholders ====
+# use data in dc-babelfish/test
+
+# create Use Case Organization ----
+# get Bearer Token
+export APP_KEY="rkgYEN5QXmsFcwbH-awWoo9Q5BJd6vdGoyzRHI0lOZs"
+export APP_SECRET="AoaoR9-Aj7woafUW7hnARWVbNqaBxINiqteyMDMuBoA"
+export MASTER_TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=admin -X POST https://babelfish.data-container.net/oauth/token | jq -r '.access_token'`
+
+cat honey_org.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $MASTER_TOKEN" -d @- -X POST https://babelfish.data-container.net/organization/
+# {"organization-id":1,"name":"Imkerei Hans Huber","admin-user-id":12}
+
+# read org
+curl -H "Authorization: Bearer $MASTER_TOKEN" https://babelfish.data-container.net/organization/1
+curl -H "Authorization: Bearer $MASTER_TOKEN" https://babelfish.data-container.net/organization/1/meta
+# !!! no authorization in dc-base
+curl "https://babelfish.data-container.net/api/data?dri=zQmZLBvttK9kK4yyr2JrpxEKJk2XSHsDjzVAR3M8LjrVbHw"
+
+# create org DID
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmZLBvttK9kK4yyr2JrpxEKJk2XSHsDjzVAR3M8LjrVbHw"}]' | oydid create --doc-pwd orgpwd --rev-pwd orgpwd2 -l babelfish.data-container.net -s
+# DID: did:oyd:zQmNoUmZbq17CZZpP4uGNNS9mQeodPKuJHhvezWSeNd9knt%40babelfish.data-container.net
+
+# create Honey User ---
+# get Bearer Token for admin user
+curl -H "Authorization: Bearer $MASTER_TOKEN" https://babelfish.data-container.net/user/12
+# {"name":"admin","organization-id":1,"oauth":{"client-id":"CT4ZGJTFCyfWFjO7XxnCE77Hl2RjGxVK3Al4-2CndrI","client-secret":"wpQFkeT4O7VUNfZQY4IdkVeq8-hUIb8eplYYw6hU6bo"},"user-id":12}
+export USER_KEY="CT4ZGJTFCyfWFjO7XxnCE77Hl2RjGxVK3Al4-2CndrI"
+export USER_SECRET="wpQFkeT4O7VUNfZQY4IdkVeq8-hUIb8eplYYw6hU6bo"
+export TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$USER_KEY -d client_secret=$USER_SECRET -d scope=write -X POST https://babelfish.data-container.net/oauth/token | jq -r '.access_token'`
+
+cat honey_user.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d @- -X POST https://babelfish.data-container.net/user/
+# {"user-id":13,"name":"Hans Huber","organization-id":1,"oauth":{"client-id":"-KuMFN5Qqbf-Ls6w2Y6Tr50Ob5F5NOpogsHHvWWdoCU","client-secret":"YE4PDxX1mpYq-xlk8HnMBozzLrBLe3qCZLYb27qGikU"}}
+
+# read user (incl. get Bearer Token for honey user)
+export HONEY_USER_KEY="-KuMFN5Qqbf-Ls6w2Y6Tr50Ob5F5NOpogsHHvWWdoCU"
+export HONEY_USER_SECRET="YE4PDxX1mpYq-xlk8HnMBozzLrBLe3qCZLYb27qGikU"
+export HONEY_TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$HONEY_USER_KEY -d client_secret=$HONEY_USER_SECRET -d scope=write -X POST https://babelfish.data-container.net/oauth/token | jq -r '.access_token'`
+curl -H "Authorization: Bearer $HONEY_TOKEN" https://babelfish.data-container.net/user/13
+curl -H "Authorization: Bearer $HONEY_TOKEN" https://babelfish.data-container.net/user/13/meta
+
+# create user DID
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmU3jzkjAyT8Uz9qCDB4hkG41vyy2fqraPVh4uSXhFxwuC"}]' | oydid create --doc-pwd beepwd --rev-pwd beepwd2 -l babelfish.data-container.net -s
+# DID: did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net
+
+# create DISP ---
+cat honey_disp.json  | curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d @- -X POST https://babelfish.data-container.net/user/
+# {"user-id":3,"name":"Data Intermediary","organization-id":1,"oauth":{"client-id":"yZutiyid09BMqed0nr_0Xb9AWdGdgXF-oxjH1dQtdXc","client-secret":"dc6D9CHxhbyM-x8Gg3q6P0sZaqSZ4bUYK86ZWezljV8"}}
+
+# read DISP
+export DISP_KEY="-KuMFN5Qqbf-Ls6w2Y6Tr50Ob5F5NOpogsHHvWWdoCU"
+export DISP_SECRET="YE4PDxX1mpYq-xlk8HnMBozzLrBLe3qCZLYb27qGikU"
+export DISP_TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$DISP_KEY -d client_secret=$DISP_SECRET -d scope=write -X POST https://babelfish.data-container.net/oauth/token | jq -r '.access_token'`
+curl -H "Authorization: Bearer $DISP_TOKEN" https://babelfish.data-container.net/user/3
+curl -H "Authorization: Bearer $DISP_TOKEN" https://babelfish.data-container.net/user/3/meta
+
+# create DISP DID
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmc2FnJAeNEYdaF4V1MTy7VAWamhp388xuH6mTczWadoBK"}]' | oydid create --doc-pwd dispwd --rev-pwd dispwd2 -l babelfish.data-container.net -s
+# DID: did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net
+# DID: did:oyd:zQmWTp4ZyMmddwwuFz3reYBMHfm6jpA3ECs6sGm2F3Z5G8n%40babelfish.data-container.net
+
+
+# Build D2A for data exchange between honey user and DISP ====
+# Credential Subject (for D2A between honey user and DISP)
+[{
+  "id": "did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net",
+  "type": "source",
+  "name": "Hans Huber"
+},{
+  "id": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+  "type": "controller",
+  "name": "Data Intermediary"
+},{
+  "id": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+  "dataAgreement": {
+    "purposes":[{
+      "purpose_desription": "I obey to D2A"
+    }]
+  }
+}]
+
+# honey user signs Credential Subject
+echo '[{"id":"did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}]' | \
+oydid vc-proof --issuer did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net --doc-pwd beepwd
+
+# response
+{
+  "type": "Ed25519Signature2020",
+  "verificationMethod": "did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net",
+  "proofPurpose": "assertionMethod",
+  "proofValue": "z5S9arYoq8ZFHVMsRAio4MpbPDTf2YDZ7rmwirGrrVUR2PKbgbagkjfRGS1yWGRk7GLbZsFKa1oMF4QmRESTP3ijE"
+}
+
+
+# DISP signs Credential Subject
+echo '[{"id":"did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}]' | \
+oydid vc-proof --issuer did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net --doc-pwd dispwd
+
+#response
+{
+  "type": "Ed25519Signature2020",
+  "verificationMethod": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+  "proofPurpose": "assertionMethod",
+  "proofValue": "zYrUM82bK33eDNjHqVyzrVzZpdHWAgnGSdEkpvWMD7Yejhr2jQoWpspA5damQKn5LmbpJcLYPjLbAMJTdprGPAqY"
+}
+
+# composed VC with proof from signed Credential Subject
+echo '{"issuer":["did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net","did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net"],"credentialSubject":[{"id":"did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}],"proof":[{"type":"Ed25519Signature2020","verificationMethod":"did:oyd:zQmVGYoyggVxDnjWdxAjyPMq7imfnD9vNixi74iNyU3vtVo%40babelfish.data-container.net","proofPurpose":"assertionMethod","proofValue":"z5S9arYoq8ZFHVMsRAio4MpbPDTf2YDZ7rmwirGrrVUR2PKbgbagkjfRGS1yWGRk7GLbZsFKa1oMF4QmRESTP3ijE"},{"type":"Ed25519Signature2020","verificationMethod":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","proofPurpose":"assertionMethod","proofValue":"zYrUM82bK33eDNjHqVyzrVzZpdHWAgnGSdEkpvWMD7Yejhr2jQoWpspA5damQKn5LmbpJcLYPjLbAMJTdprGPAqY"}]}' | \
+oydid vc-push -l babelfish.data-container.net
+
+# Verifiable Credential is now available at https://babelfish.data-container.net/credentials/zQmUuXarsxrn1X8ETkXukzpkBW41ERgxkMgsy7RgmF6wxcK
+# only accessible by DISP
+oydid read-vc zQmUuXarsxrn1X8ETkXukzpkBW41ERgxkMgsy7RgmF6wxcK -l babelfish.data-container.net \
+        --holder did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net \
+        --doc-pwd dispwd
+
+# make VC publicly available as Verifiable Presentation
+oydid read-vc zQmeCoAr67eoVdYpcvxe15djaDULQixJSdtRJhfEzkvq4H7 -l babelfish.data-container.net \
+        --holder did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net \
+        --doc-pwd dispwd | \
+oydid vp-push -l babelfish.data-container.net \
+        --holder did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net \
+        --doc-pwd dispwd
+# https://babelfish.data-container.net/presentations/zQmekopDjUokBSYxoaH5JTU6btXjAeQ4XFz4QfgZgp4rU9X
+
+
+# create HoneyBatch Object ====
+# create collection ---
+export HONEY_USER_KEY="-KuMFN5Qqbf-Ls6w2Y6Tr50Ob5F5NOpogsHHvWWdoCU"
+export HONEY_USER_SECRET="YE4PDxX1mpYq-xlk8HnMBozzLrBLe3qCZLYb27qGikU"
+export HONEY_TOKEN=`curl -s -d grant_type=client_credentials -d client_id=$HONEY_USER_KEY -d client_secret=$HONEY_USER_SECRET -d scope=write -X POST https://babelfish.data-container.net/oauth/token | jq -r '.access_token'`
+cat col.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $HONEY_TOKEN" -d @- -X POST https://babelfish.data-container.net/collection/
+
+# read collection
+curl -H "Authorization: Bearer $HONEY_TOKEN" https://babelfish.data-container.net/collection/18
+curl -H "Authorization: Bearer $HONEY_TOKEN" https://babelfish.data-container.net/collection/18/meta
+
+# create object (honey batch) ---
+# create object
+cat obj.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $HONEY_TOKEN" -d @- -X POST https://babelfish.data-container.net/object/
+
+# write payload (incl. reference to D2A)
+cat honey_data.json | curl -H "Content-Type: application/json" -H "Authorization: Bearer $HONEY_TOKEN" -d @- -X PUT https://babelfish.data-container.net/object/19/write
+
+# read object
+curl -H "Authorization: Bearer $HONEY_TOKEN" https://babelfish.data-container.net/object/19
+curl -H "Authorization: Bearer $HONEY_TOKEN" https://babelfish.data-container.net/object/19/meta
+curl -H "Authorization: Bearer $HONEY_TOKEN" https://babelfish.data-container.net/object/19/read
+
+# create DID for honey batch
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmcftHUW3gxf6dKxcvFJCa5AHqDpzquXVKaWretnmvzyPH"}]' | oydid create --doc-pwd hbpwd --rev-pwd hbpwd2 -l babelfish.data-container.net -s
+# DID: did:oyd:zQmYNVHASFC8jwo6pQxDiRAwxC9PxCkFoacMEo4eNXGBFZ2%40babelfish.data-container.net
+

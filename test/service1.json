@@ -1,0 +1,27 @@
+{
+  "service-id": 1,
+  "interface": {
+    "info": { "title": "DID Linter" },
+    "servers": [{"url": "https://didlint.ownyourdata.eu"}],
+    "party": "data_consumer",
+    "paths": {
+      "/api/validate": {
+        "post": {
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {} 
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "data": null,
+  "governance": {
+    "dpv:hasProcessing": ["dpv:Use"],
+    "dpv:hasPurpose": "dpv:Purpose",
+    "dpv:hasExpiryTime": "6 months"
+  }
+}

@@ -1,0 +1,150 @@
+docker run -d --name babelfish -p 3100:3000 oydeu/dc-babelfish
+docker run -d --name babelfish -p 3100:3000 oydeu/dc-babelfish:arm64v8
+
+curl http://localhost:3100/list/count/page
+curl https://babelfish.data-container.net/list/count/page
+curl http://localhost:3100/service/1
+curl https://babelfish.data-container.net/service/1
+
+cat org.json | curl -H "Content-Type: application/json" -d @- -X POST http://localhost:3100/organization/
+curl http://localhost:3100/organization/1
+
+cat org.json | curl -H "Content-Type: application/json" -d @- -X POST https://babelfish.data-container.net/organization/
+curl https://babelfish.data-container.net/organization/1
+
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmeS1pxvNqf47TCgNTrHgX5sEoB1aup99CB61FzSSHqLzC"}]' | oydid create --doc-pwd pwd1 --rev-pwd pwd2 -l babelfish.data-container.net -s
+
+cat honey_org.json | curl -H "Content-Type: application/json" -d @- -X POST http://localhost:3100/organization/
+curl http://localhost:3100/organization/1
+
+cat honey_user.json  | curl -H "Content-Type: application/json" -d @- -X POST http://localhost:3100/user/
+curl http://localhost:3100/user/2
+
+
+cat honey_org.json | curl -H "Content-Type: application/json" -d @- -X POST https://babelfish.data-container.net/organization/
+curl https://babelfish.data-container.net/organization/1
+curl https://babelfish.data-container.net/organization/1/meta
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmZLBvttK9kK4yyr2JrpxEKJk2XSHsDjzVAR3M8LjrVbHw"}]' | oydid create --doc-pwd orgpwd --rev-pwd orgpwd2 -l babelfish.data-container.net -s
+
+cat honey_user.json  | curl -H "Content-Type: application/json" -d @- -X POST https://babelfish.data-container.net/user/
+curl https://babelfish.data-container.net/user/2
+curl https://babelfish.data-container.net/user/2/meta
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmU3jzkjAyT8Uz9qCDB4hkG41vyy2fqraPVh4uSXhFxwuC"}]' | oydid create --doc-pwd beepwd --rev-pwd beepwd2 -l babelfish.data-container.net -s
+
+cat honey_disp.json  | curl -H "Content-Type: application/json" -d @- -X POST https://babelfish.data-container.net/user/
+curl https://babelfish.data-container.net/user/3
+curl https://babelfish.data-container.net/user/3/meta
+echo '[{"id":"#payload", "type": "data", "serviceEndpoint": "https://babelfish.data-container.net/api/data?dri=zQmc2FnJAeNEYdaF4V1MTy7VAWamhp388xuH6mTczWadoBK"}]' | oydid create --doc-pwd dispwd --rev-pwd dispwd2 -l babelfish.data-container.net -s
+
+# build VC =================
+# credentialSubject only:
+[{
+  "id": "did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net",
+  "type": "source",
+  "name": "Hans Huber"
+},{
+  "id": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+  "type": "controller",
+  "name": "Data Intermediary"
+},{
+  "id": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+  "dataAgreement": {
+    "purposes":[{
+      "purpose_desription": "I obey to D2A"
+    }]
+  }
+}]
+# compact:
+[{"id":"did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}]
+
+# command to create proof for Beekeeper
+echo '[{"id":"did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}]' | oydid vc-proof --issuer did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net --doc-pwd beepwd
+# result
+{
+  "type": "Ed25519Signature2020",
+  "verificationMethod": "did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net",
+  "proofPurpose": "assertionMethod",
+  "proofValue": "zqdKj8HrVeAqerwrVN3ed2pJbwWamRBNSPBLELbkxS8n9Z2RvDzxmyt1K9b94We75TJNrSC6ye4z7Kx9Z5ouf3Ho"
+}
+
+# command to create proof for DISP
+echo '[{"id":"did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}]' | oydid vc-proof --issuer did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net --doc-pwd dispwd
+#result
+{
+  "type": "Ed25519Signature2020",
+  "verificationMethod": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+  "proofPurpose": "assertionMethod",
+  "proofValue": "z2pU1pp8XrG3F1WM4PmMJosoSepZz5jpASLvGExFbbGPy4graJefZH86ZTWxw5v4BEGoYwdVA7mV3EMkZAtxRZYVt"
+}
+
+# composed VC
+{
+  "issuer": [
+    "did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net",
+    "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net"],
+  "credentialSubject": [{
+    "id": "did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net",
+    "type": "source",
+    "name": "Hans Huber"
+  },{
+    "id": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+    "type": "controller",
+    "name": "Data Intermediary"
+  },{
+    "id": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+    "dataAgreement": {
+      "purposes":[{
+        "purpose_desription": "I obey to D2A"
+      }]
+    }
+  }],
+  "proof": [{
+    "type": "Ed25519Signature2020",
+    "verificationMethod": "did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "zqdKj8HrVeAqerwrVN3ed2pJbwWamRBNSPBLELbkxS8n9Z2RvDzxmyt1K9b94We75TJNrSC6ye4z7Kx9Z5ouf3Ho"
+  },{
+    "type": "Ed25519Signature2020",
+    "verificationMethod": "did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z2pU1pp8XrG3F1WM4PmMJosoSepZz5jpASLvGExFbbGPy4graJefZH86ZTWxw5v4BEGoYwdVA7mV3EMkZAtxRZYVt"
+  }]
+}
+
+# compact VC input:
+{"issuer":["did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net"],"credentialSubject":[{"id":"did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}],"proof":[{"type":"Ed25519Signature2020","verificationMethod":"did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","proofPurpose":"assertionMethod","proofValue":"zqdKj8HrVeAqerwrVN3ed2pJbwWamRBNSPBLELbkxS8n9Z2RvDzxmyt1K9b94We75TJNrSC6ye4z7Kx9Z5ouf3Ho"},{"type":"Ed25519Signature2020","verificationMethod":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","proofPurpose":"assertionMethod","proofValue":"z2pU1pp8XrG3F1WM4PmMJosoSepZz5jpASLvGExFbbGPy4graJefZH86ZTWxw5v4BEGoYwdVA7mV3EMkZAtxRZYVt"}]}
+
+# cmdline
+echo '{"issuer":["did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net"],"credentialSubject":[{"id":"did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","type":"source","name":"Hans Huber"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","type":"controller","name":"Data Intermediary"},{"id":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","dataAgreement":{"purposes":[{"purpose_desription":"I obey to D2A"}]}}],"proof":[{"type":"Ed25519Signature2020","verificationMethod":"did:oyd:zQme7k5u6XryvmnUkS1bRBrbP6CrzHMcjKP3qduN9EkCFmp%40babelfish.data-container.net","proofPurpose":"assertionMethod","proofValue":"zqdKj8HrVeAqerwrVN3ed2pJbwWamRBNSPBLELbkxS8n9Z2RvDzxmyt1K9b94We75TJNrSC6ye4z7Kx9Z5ouf3Ho"},{"type":"Ed25519Signature2020","verificationMethod":"did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net","proofPurpose":"assertionMethod","proofValue":"z2pU1pp8XrG3F1WM4PmMJosoSepZz5jpASLvGExFbbGPy4graJefZH86ZTWxw5v4BEGoYwdVA7mV3EMkZAtxRZYVt"}]}' | oydid vc-push -l babelfish.data-container.net
+# created https://babelfish.data-container.net/credentials/zQmeCoAr67eoVdYpcvxe15djaDULQixJSdtRJhfEzkvq4H7
+
+# create Presentation
+oydid read-vc zQmeCoAr67eoVdYpcvxe15djaDULQixJSdtRJhfEzkvq4H7 -l babelfish.data-container.net \
+        --holder did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net \
+        --doc-pwd dispwd | \
+oydid vp-push --holder did:oyd:zQmY75fpVSzXAe9VFNf6UxVW2t8DYqtmQbtBGmqcEytZW1z%40babelfish.data-container.net \
+        --doc-pwd dispwd -l babelfish.data-container.net 
+# created https://babelfish.data-container.net/presentations/zQmWoypwrvt6PcfG9ew4tP6VxvP6XKXx5kVfjwwk8by99mF
+
+
+# Storage Provider(local) ================
+cat col.json | curl -H "Content-Type: application/json" -d @- -X POST http://localhost:3100/collection/
+curl http://localhost:3100/collection/1
+curl http://localhost:3100/collection/1/meta
+
+cat obj.json | curl -H "Content-Type: application/json" -d @- -X POST http://localhost:3100/object/
+curl http://localhost:3100/object/2
+curl http://localhost:3100/object/2/meta
+
+
+# Storage Provider(babelfish) ================
+cat col.json | curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d @- -X POST https://babelfish.data-container.net/collection/
+curl -H "Authorization: Bearer $TOKEN" https://babelfish.data-container.net/collection/59
+curl -H "Authorization: Bearer $TOKEN" https://babelfish.data-container.net/collection/59/meta
+
+cat obj.json | curl -H "Content-Type: application/json" -d @- -X POST https://babelfish.data-container.net/object/
+curl https://babelfish.data-container.net/object/5
+curl https://babelfish.data-container.net/object/5/meta
+
+cat honey_data.json | curl -H "Content-Type: application/json" -d @- -X PUT https://babelfish.data-container.net/object/5/write
+curl https://babelfish.data-container.net/object/5/read
