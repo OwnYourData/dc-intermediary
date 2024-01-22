@@ -1,8 +1,8 @@
 # Identity Management with `did:oyd`
 
-*last update: 29 April 2023*  
+*last update: 22 January 2024*  
 
-Welcome to our comprehensive tutorial on utilizing Decentralized Identifiers (DIDs) to empower your digital identity management! In this hands-on guide, we will delve into the core concepts and advantages of the `did:oyd` method, and demonstrate step-by-step how to create, authenticate, and manage your own decentralized identifiers. By the end of this tutorial, you will have gained valuable insights into the world of decentralized identity management and possess the skills to harness its potential for your projects, applications, and personal use. Refer to the [Tutorial-Overview](https://github.com/OwnYourData/dc-babelfish/tree/main/tutorial) for other aspects of the NGI ONTOCHAIN Gateway API.
+Welcome to our comprehensive tutorial on utilizing Decentralized Identifiers (DIDs) to empower your digital identity management! In this hands-on guide, we will delve into the core concepts and advantages of the `did:oyd` method, and demonstrate step-by-step how to create, authenticate, and manage your own decentralized identifiers. By the end of this tutorial, you will have gained valuable insights into the world of decentralized identity management and possess the skills to harness its potential for your projects, applications, and personal use. Refer to the [Tutorial-Overview](https://github.com/OwnYourData/dc-intermediary/tree/main/tutorial) for other aspects of the OwnYourData Intermediary.
 
 ### Content
 
@@ -11,7 +11,8 @@ Welcome to our comprehensive tutorial on utilizing Decentralized Identifiers (DI
 [2 - Resolving a DID](#2---resolving-a-did)  
 [3 - DID Lifecycle](#3---did-lifecycle)  
 [4 - Delegation](#4---delegation)  
-[5 - Verifiable Credentials & Verifiable Presentations](#5---verifiable-credentials--verifiable-presentations)  
+[5 - Rotation](#5---rotation)
+[6 - Verifiable Credentials & Verifiable Presentations](#5---verifiable-credentials--verifiable-presentations)  
 
 &nbsp;
 
@@ -20,6 +21,7 @@ Welcome to our comprehensive tutorial on utilizing Decentralized Identifiers (DI
 ### On the Command Line  
 To execute commands in the steps below make sure to have the following tools installed:    
 * `oydid`: download and installation instructions [available here](https://github.com/OwnYourData/oydid/tree/main/cli)    
+* `curl`: download and installation instructions [available here](https://curl.se/download.html)
 * `jq`: download and installation instructions [available here](https://stedolan.github.io/jq/download/)    
 
 Alternatively, you can use a ready-to-use Docker image with all tools pre-installed:    
@@ -240,7 +242,75 @@ oydid pubkeys --revocation did:oyd:zQmc5pWjZxFsvaTupL7p3cUzZvrPp86TQMxPerzF3tjzD
 
 [back to top](#)
 
-## 5 - Verifiable Credentials & Verifiable Presentations
+
+## 5 - Rotation
+DID Rotation refers to the process of updating or changing a Decentralized Identifier (DID) while maintaining the continuity and integrity of the digital identity it signifies.
+
+**Create original `did:oyd` DID**
+We create a DID that should be later rotated to another DID method.
+```bash
+echo '' | oydid create --doc-pwd doc-rot --rev-pwd rev-rot -z 1
+```
+*Note:* with the above parameters the following DID is created: [`did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51`](https://dev.uniresolver.io/#did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51) 
+
+**Create new `did:ebsi` DID (for rotation)**
+Using [DanubeTech's GoDiddy](https://godiddy.com/) service and the [EBSI Users Onboarding Service](https://app-pilot.ebsi.eu/users-onboarding/v2) we can set the follwoing to environment variables:
+* `GoDIDDY_TOKEN` from https://godiddy.com/dashboard > API Keys
+* `EBSI_TOKEN` from https://app-pilot.ebsi.eu/users-onboarding/v2
+```bash
+echo '{"didDocument": {"@context":["https//www.w3.org/ns/did/v1"],"service": [],"verificationMethod": []}}' | \
+jq --arg ebsi_token "$EBSI_TOKEN" '. += {"secret": {"token": $ebsi_token}}' | \
+curl -H "Authorization: Bearer $GODIDDY_TOKEN" \
+     -H "Content-Type: application/json" -d @- \
+     -X POST "https://api.godiddy.com/0.1.0/universal-registrar/create?method=ebsi"
+```
+Afterwards:
+* set `DID_EBSI` to newly created did:ebsi:...
+    ```bash=
+    curl -H "Authorization: Bearer $GODIDDY_TOKEN" \
+      "https://api.godiddy.com/0.1.0/wallet-service/keys?controller=$DID_EBSI"
+    ```
+* set `KEY_ID` to `id` in response
+    ```bash=
+    curl -H "Authorization: Bearer $GODIDDY_TOKEN" \
+      "https://api.godiddy.com/0.1.0/wallet-service/keys/$KEY_ID?exportPrivate=true"
+    ```
+*Note:* the DID created in our example is `did:ebsi:zg1rJyVu5sUdVAc14X3e5ob`
+
+**Add `alsoKnownAs` to original DID pointing to new DID**
+With `DID_OYD` and `DID_EBSI` from above, run on the command line:
+```bash=
+echo "{\"alsoKnownAs\": \"$DID_EBSI\"}" | \
+oydid update $DID_OYD -z 2 \
+    --old-doc-pwd doc-rot --doc-pwd doc-rot2 \
+    --old-rev-pwd rev-rot --rev-pwd rev-rot2
+```
+
+*Note:* the updated DID is now [`did:oyd:zQmaC996sgjL7puygD1TNpWFzgB3Z8tpydYGApxtoP54nRN`](https://dev.uniresolver.io/#did:oyd:zQmaC996sgjL7puygD1TNpWFzgB3Z8tpydYGApxtoP54nRN)
+
+**Deactivate original DID**
+Command line:
+```bash=
+oydid revoke $DID_OYD --doc-pwd doc-rot2 --rev-pwd rev-rot2
+```
+
+**Update new DID with reference (`alsoKnownAs`) to original DID**
+In the last step we add the final pointer in the new DID Document:
+```bash
+curl https://dev.uniresolver.io/#$DID_EBSI | \
+jq --arg did_oyd "$DID_OYD" '. += {"alsoKnownAs": $did_oyd}' | \
+jq --arg ebsi_token "$EBSI_TOKEN" '. += {"secret": {"token": $ebsi_token}}' | \
+curl -H "Authorization: Bearer $GODIDDY_TOKEN" \
+     -H "Content-Type: application/json" -d @- \
+     -X POST "https://api.godiddy.com/0.1.0/universal-registrar/update?method=ebsi"
+```
+
+The DID Rotation is now complete and rotates [`did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51`](https://dev.uniresolver.io/#did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51) to [`did:ebsi:zg1rJyVu5sUdVAc14X3e5ob`](https://dev.uniresolver.io/#did:ebsi:zg1rJyVu5sUdVAc14X3e5ob). Read more about DID Rotation in our [accompanying blog post](https://www.ownyourdata.eu/en/did-rotation/.
+
+[back to top](#)
+
+
+## 6 - Verifiable Credentials & Verifiable Presentations
 
 An important application for DIDs is creating an attestation. With OYDID you can create standard-conform Verifiable Credentials and Verifiable Presentations. We use the following DIDs for the examples below:
 ```bash
