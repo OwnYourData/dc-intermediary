@@ -39,7 +39,7 @@ Alternatively, you can use a ready-to-use Docker image with all tools pre-instal
 To manage DIDs beyond the command line, i.e., when you want to integrate `did:oyd` into your application, it is also possible to access all functions via an API. As the de-facto standard the DIF [Uniresolver](https://resolver.identity.foundation/) and [Uniregistrar](https://uniregistrar.io/) have specified the relevant endpoints and `did:oyd` is fully compliant (see also the relevant [Swagger documentation here](https://oydid.ownyourdata.eu/api-docs/index.html)).
 
 ### OYDID Repository
-For `did:oyd` the DID document and associated logs are stored in a repository. In this tutorial we use either the default OYDID repo (https://oydid.ownyourdata.eu) or the NGI ONTOCHAIN Gateway API (https://babelfish.data-container.net). Read more about [deployment options for OYDID repositories here](https://github.com/OwnYourData/oydid/tree/main/tutorial#deployment).
+For `did:oyd` the DID document and associated logs are stored in a repository. In this tutorial we use the default OYDID repo (https://oydid.ownyourdata.eu). Read more about [deployment options for OYDID repositories here](https://github.com/OwnYourData/oydid/tree/main/tutorial#deployment).
 
 [back to top](#)
 
@@ -429,4 +429,4 @@ echo '{"role":"holder"}' | oydid create --doc-pwd pwd1 --rev-pwd pwd2 -z 1 -s
 
 ## License
 
-[MIT License 2023 - OwnYourData.eu](https://raw.githubusercontent.com/OwnYourData/dc-babelfish/main/LICENSE)
+[MIT License 2043 - OwnYourData.eu](https://raw.githubusercontent.com/OwnYourData/dc-intermediary/main/LICENSE)
