@@ -11,7 +11,7 @@ Welcome to our comprehensive tutorial on utilizing Decentralized Identifiers (DI
 [2 - Resolving a DID](#2---resolving-a-did)  
 [3 - DID Lifecycle](#3---did-lifecycle)  
 [4 - Delegation](#4---delegation)  
-[5 - Rotation](#5---rotation)
+[5 - Rotation](#5---rotation)  
 [6 - Verifiable Credentials & Verifiable Presentations](#5---verifiable-credentials--verifiable-presentations)  
 
 &nbsp;
@@ -243,17 +243,17 @@ oydid pubkeys --revocation did:oyd:zQmc5pWjZxFsvaTupL7p3cUzZvrPp86TQMxPerzF3tjzD
 [back to top](#)
 
 
-## 5 - Rotation
+## 5 - Rotation  
 DID Rotation refers to the process of updating or changing a Decentralized Identifier (DID) while maintaining the continuity and integrity of the digital identity it signifies.
 
-**Create original `did:oyd` DID**
+**Create original `did:oyd` DID**  
 We create a DID that should be later rotated to another DID method.
 ```bash
 echo '' | oydid create --doc-pwd doc-rot --rev-pwd rev-rot -z 1
 ```
 *Note:* with the above parameters the following DID is created: [`did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51`](https://dev.uniresolver.io/#did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51) 
 
-**Create new `did:ebsi` DID (for rotation)**
+**Create new `did:ebsi` DID (for rotation)**  
 Using [DanubeTech's GoDiddy](https://godiddy.com/) service and the [EBSI Users Onboarding Service](https://app-pilot.ebsi.eu/users-onboarding/v2) we can set the follwoing to environment variables:
 * `GoDIDDY_TOKEN` from https://godiddy.com/dashboard > API Keys
 * `EBSI_TOKEN` from https://app-pilot.ebsi.eu/users-onboarding/v2
@@ -265,7 +265,7 @@ curl -H "Authorization: Bearer $GODIDDY_TOKEN" \
      -X POST "https://api.godiddy.com/0.1.0/universal-registrar/create?method=ebsi"
 ```
 Afterwards:
-* set `DID_EBSI` to newly created did:ebsi:...
+* set `DID_EBSI` to newly created did:ebsi
     ```bash=
     curl -H "Authorization: Bearer $GODIDDY_TOKEN" \
       "https://api.godiddy.com/0.1.0/wallet-service/keys?controller=$DID_EBSI"
@@ -277,7 +277,7 @@ Afterwards:
     ```
 *Note:* the DID created in our example is `did:ebsi:zg1rJyVu5sUdVAc14X3e5ob`
 
-**Add `alsoKnownAs` to original DID pointing to new DID**
+**Add `alsoKnownAs` to original DID pointing to new DID**  
 With `DID_OYD` and `DID_EBSI` from above, run on the command line:
 ```bash=
 echo "{\"alsoKnownAs\": \"$DID_EBSI\"}" | \
@@ -288,13 +288,13 @@ oydid update $DID_OYD -z 2 \
 
 *Note:* the updated DID is now [`did:oyd:zQmaC996sgjL7puygD1TNpWFzgB3Z8tpydYGApxtoP54nRN`](https://dev.uniresolver.io/#did:oyd:zQmaC996sgjL7puygD1TNpWFzgB3Z8tpydYGApxtoP54nRN)
 
-**Deactivate original DID**
+**Deactivate original DID**  
 Command line:
 ```bash=
 oydid revoke $DID_OYD --doc-pwd doc-rot2 --rev-pwd rev-rot2
 ```
 
-**Update new DID with reference (`alsoKnownAs`) to original DID**
+**Update new DID with reference (`alsoKnownAs`) to original DID**  
 In the last step we add the final pointer in the new DID Document:
 ```bash
 curl https://dev.uniresolver.io/#$DID_EBSI | \
@@ -305,7 +305,8 @@ curl -H "Authorization: Bearer $GODIDDY_TOKEN" \
      -X POST "https://api.godiddy.com/0.1.0/universal-registrar/update?method=ebsi"
 ```
 
-The DID Rotation is now complete and rotates [`did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51`](https://dev.uniresolver.io/#did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51) to [`did:ebsi:zg1rJyVu5sUdVAc14X3e5ob`](https://dev.uniresolver.io/#did:ebsi:zg1rJyVu5sUdVAc14X3e5ob). Read more about DID Rotation in our [accompanying blog post](https://www.ownyourdata.eu/en/did-rotation/.
+The DID Rotation is now complete and rotates [`did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51`](https://dev.uniresolver.io/#did:oyd:zQmZ7wwgCxkExNeXHm9XLxAKs7Y7pubTKCHQLTxRrA3Fz51) to [`did:ebsi:zg1rJyVu5sUdVAc14X3e5ob`](https://dev.uniresolver.io/#did:ebsi:zg1rJyVu5sUdVAc14X3e5ob).  
+Read more about DID Rotation in our [accompanying blog post](https://www.ownyourdata.eu/en/did-rotation/.
 
 [back to top](#)
 
