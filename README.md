@@ -29,4 +29,4 @@ If you want to contribute, please follow these steps:
 
 ## License
 
-[MIT License 2024 - DEC112.eu](https://github.com/OwnYourData/dc-intermediary/blob/main/LICENSE)
+[MIT License 2024 - OwnYourData.eu](https://github.com/OwnYourData/dc-intermediary/blob/main/LICENSE)
