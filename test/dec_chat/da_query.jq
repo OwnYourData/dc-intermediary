@@ -1,0 +1,1 @@
+.verifiableCredential[0].credentialSubject.purposes[0].processing_method

@@ -1,6 +1,6 @@
 class ServicesController < ApplicationController
     include ApplicationHelper
-    include BabelfishHelper
+    include IntermediaryHelper
     include Pagy::Backend
 
     Hash.include CoreExtensions

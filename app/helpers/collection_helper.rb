@@ -18,4 +18,18 @@ module CollectionHelper
             return {"id": id, "data": data, "meta": meta}
         end
     end
+
+    def createEvent(collection_id, event_type, event, event_object)
+puts "in createEvent"
+puts "collection_id: " + collection_id.to_s
+        @ce = CollectionEvent.new
+        @ce.collection_id = collection_id
+        @ce.user_id = doorkeeper_user
+        @ce.timestamp = DateTime.now
+        @ce.event_type = event_type
+        @ce.event_object = event_object.to_json
+        @ce.event = event
+        retVal = @ce.save
+puts "retVal: " + retVal.to_s
+    end
 end

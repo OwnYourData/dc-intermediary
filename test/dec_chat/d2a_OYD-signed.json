@@ -1,0 +1,6 @@
+{
+  "type": "Ed25519Signature2020",
+  "verificationMethod": "did:oyd:zQmWwtUAbJHtd2wRU5GnR3wYWrt7vBQQ7U1GPK12tEvvKtU",
+  "proofPurpose": "assertionMethod",
+  "proofValue": "z5c98wYYReTLVoejWoqX9h2ZYDUXgDhUEaCWibgPV62YT1QtRqp9Gnsg4UPvqqFGpwZqX6SJta9KmXzNWox4HXH34"
+}

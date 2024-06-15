@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONTAINER="dc-babelfish"
+CONTAINER="dc-intermediary"
 REPOSITORY="oydeu"
 TAG="latest"
 
@@ -11,6 +11,7 @@ BUILD_ARM=false
 PLATFORM="linux/amd64"
 BUILD_X86=true
 BUILD_LOCAL=false
+DEBUG_OPTION=""
 DOCKERFILE="./docker/Dockerfile"
 
 while [ $# -gt 0 ]; do
@@ -40,6 +41,9 @@ while [ $# -gt 0 ]; do
             BUILD_X86=true
             PLATFORM="linux/amd64"
             ;;
+        --debug*)
+            DEBUG_OPTION="--progress=plain"
+            ;;
         *)
             printf "unknown option(s)\n"
             if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
@@ -52,9 +56,9 @@ while [ $# -gt 0 ]; do
 done
 
 if $BUILD_CLEAN; then
-    docker build --platform $PLATFORM --no-cache -f $DOCKERFILE -t $REPOSITORY/$CONTAINER:$TAG .
+    docker build $DEBUG_OPTION --platform $PLATFORM --no-cache -f $DOCKERFILE -t $REPOSITORY/$CONTAINER:$TAG .
 else
-    docker build --platform $PLATFORM -f $DOCKERFILE -t $REPOSITORY/$CONTAINER:$TAG .
+    docker build $DEBUG_OPTION --platform $PLATFORM -f $DOCKERFILE -t $REPOSITORY/$CONTAINER:$TAG .
 fi
 
 if $DOCKER_UPDATE; then

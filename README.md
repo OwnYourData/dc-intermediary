@@ -1,8 +1,8 @@
 # Data Intermediary
-Implementation of an open source Data Intermediary
+Implementation of an open source Data Intermediary.
 
 ## Resources
-* Project description: https://trustchain.ngi.eu/im4dec/    
+* Project description: https://www.ownyourdata.eu/en/dpp-crc/    
 * Semantic Container: https://github.com/OwnYourData/semcon
 
 &nbsp;    
@@ -23,7 +23,7 @@ If you want to contribute, please follow these steps:
 
 ## About  
 
-<img align="right" src="https://raw.githubusercontent.com/OwnYourData/dc-intermediary/main/res/logo-ngi-trustchain-positive.png" height="100">This project has received funding from the European Union’s Horizon 2020 research and innovation program through the [NGI TRUSTCHAIN program](https://trustchain.ngi.eu/) under cascade funding agreement No 101093274.
+<img align="right" src="https://raw.githubusercontent.com/OwnYourData/dc-cpprivate/main/app/assets/images/ngi-sargasso.png" height="50">This project has received funding from the European Union’s Horizon 2020 research and innovation program through the [NGI TRUSTCHAIN program](https://trustchain.ngi.eu/) under cascade funding agreement No 101093274 and from the European Union’s Horizon Europe research and innovation program through the [NGI SARGASSO program](https://ngisargasso.eu/) under cascade funding agreement No 101092887.
 
 <br clear="both" />
 

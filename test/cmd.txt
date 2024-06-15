@@ -1,5 +1,5 @@
-docker run -d --name babelfish -p 3100:3000 oydeu/dc-babelfish
-docker run -d --name babelfish -p 3100:3000 oydeu/dc-babelfish:arm64v8
+docker run -d --name im -p 3100:3000 oydeu/dc-intermediary
+docker run -d --name im -p 3100:3000 oydeu/dc-intermediary:arm64v8
 
 curl http://localhost:3100/list/count/page
 curl https://babelfish.data-container.net/list/count/page

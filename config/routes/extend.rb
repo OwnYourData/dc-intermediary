@@ -31,13 +31,18 @@ scope '/' do
     match 'user/:id',          to: 'users#delete',  via: 'delete'
 
     # Collection handling
-    match 'collection/list',        to: 'collections#list',    via: 'get'
-    match 'collection/:id',         to: 'collections#read',    via: 'get'
-    match 'collection/:id/meta',    to: 'collections#read',    via: 'get', defaults: { show_meta: "TRUE"}
-    match 'collection/:id/objects', to: 'collections#objects', via: 'get'
-    match 'collection',             to: 'collections#create',  via: 'post'
-    match 'collection/:id',         to: 'collections#update',  via: 'put'
-    match 'collection/:id',         to: 'collections#delete',  via: 'delete'
+    match 'collection/list',        to: 'collections#list',          via: 'get'
+    match 'collection/:id',         to: 'collections#read',          via: 'get'
+    match 'collection/:id/meta',    to: 'collections#read',          via: 'get', defaults: { show_meta: "TRUE"}
+    match 'collection/:id/objects', to: 'collections#objects',       via: 'get'
+    match 'collection/:id/access',  to: 'collections#get_access',    via: 'get'
+    match 'collection/:id/access',  to: 'collections#create_access', via: 'post'
+    match 'collection/access/:id',  to: 'collections#delete_access', via: 'delete'
+    match 'collection/:id/events',  to: 'collections#events',        via: 'get'
+    match 'event/:id',              to: 'collections#read_event',    via: 'get'
+    match 'collection',             to: 'collections#create',        via: 'post'
+    match 'collection/:id',         to: 'collections#update',        via: 'put'
+    match 'collection/:id',         to: 'collections#delete',        via: 'delete'
 
     # Object handling
     match 'object/:id',                 to: 'objects#read',   via: 'get'
@@ -51,9 +56,6 @@ scope '/' do
     match 'object/:id',                 to: 'objects#delete', via: 'delete'
 
     # Integration Helper
-    match 'integration/match_up',       to: 'integrations#match_up',   via: 'post'
-    match 'integration/match_d2a',      to: 'integrations#match_d2a',  via: 'post'
-    match 'integration/create_d2a',     to: 'integrations#create_d2a', via: 'post'
-    match 'integration/accept_d2a',     to: 'integrations#accept_d2a', via: 'post'
+    match 'integration/match_da',       to: 'integrations#match_da', via: 'post'
 
 end

@@ -1,4 +1,4 @@
-module BabelfishHelper
+module IntermediaryHelper
     def doorkeeper_org
         return Doorkeeper::Application.find(doorkeeper_token.application_id).organization_id.to_s
     end

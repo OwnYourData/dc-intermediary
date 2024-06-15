@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: concrete-disp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: concrete-disp
+  template:
+    metadata:
+      labels:
+        app: concrete-disp
+    spec:
+      containers:
+      - name: concrete-disp
+        image: oydeu/dc-intermediary:latest
+        ports:
+        - containerPort: 3000
+        env:
+          - name: LANG
+            value: C.UTF-8
+          - name: RAILS_LOG_TO_STDOUT
+            value: "TRUE"
+          - name: RAILS_SERVE_STATIC_FILES
+            value: "TRUE"
+          - name: RAILS_ENV
+            value: production
+          - name: RAILS_CONFIG_HOSTS
+            value: "concrete.go-data.at"
+          - name: AUTH
+            value: "true"
+          - name: DC_DB
+            value: kubernetes
+          - name: DB2_HOST
+            value: postgres
+          - name: DB2_NAME
+            value: concrete-disp
+          - name: DB2_USER
+            value: postgres
+          - name: POSTGRES2_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret
+                key: superUserPassword
+          - name: DEFAULT_DID_OAUTH_APP
+            value: "oydid"
+          - name: DEFAULT_VC_OAUTH_APP
+            value: "oydid-vc"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: concrete-disp
+spec:
+  selector:
+    app: concrete-disp
+  type: NodePort
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: concrete-disp
+  annotations:
+    certmanager.io/issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: "nginx"
+  tls:
+  - hosts:
+    - concrete.go-data.at
+    secretName: concrete-disp-tls
+  rules:
+  - host: concrete.go-data.at
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: concrete-disp
+            port:
+              number: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: concrete-disp-tls
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-prod"
+spec:
+  secretName: concrete-disp-tls
+  issuerRef:
+    group: cert-manager.io
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - 'concrete.go-data.at'

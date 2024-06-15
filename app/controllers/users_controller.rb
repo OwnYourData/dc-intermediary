@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
     include ApplicationHelper
-    include BabelfishHelper
+    include IntermediaryHelper
 
     before_action -> { doorkeeper_authorize! :write }, only: [:create]
     before_action -> { doorkeeper_authorize! :write, :admin }, only: [:update, :delete]

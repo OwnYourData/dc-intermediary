@@ -1,6 +1,6 @@
 class OrganizationsController < ApplicationController
     include ApplicationHelper
-    include BabelfishHelper
+    include IntermediaryHelper
 
     before_action -> { doorkeeper_authorize! :admin }, only: [:create, :index]
     before_action -> { doorkeeper_authorize! :write, :admin }, only: [:update, :delete]

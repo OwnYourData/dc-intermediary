@@ -1,6 +1,6 @@
 class ObjectsController < ApplicationController
     include ApplicationHelper
-    include BabelfishHelper
+    include IntermediaryHelper
     include CollectionHelper
     include StorageHelper
 
@@ -67,6 +67,7 @@ class ObjectsController < ApplicationController
             render json: {"error": store[:error].to_s},
                    status: 500
         else
+            createEvent(col_id, CE_CREATE_OBJECT, "create object", {object_id: store[:id], data: data, meta: meta})
             render json: {"object-id": store[:id], "collection-id": col_id},
                    status: 200
         end
@@ -170,6 +171,7 @@ class ObjectsController < ApplicationController
                        status: 500
             end
         else
+            createEvent(col_id, CE_UPDATE_OBJECT, "update object", {object_id: store[:id], data: data, meta: meta})
             render json: {"object-id": store[:id], "collection-id": col_id},
                    status: 200
         end
@@ -251,6 +253,7 @@ class ObjectsController < ApplicationController
                            status: 500
                 end
             else
+                createEvent(col_id, CE_WRITE_PAYLOAD, "write payload", {object_id: store[:id], payload_dri: payload_dri, payload: payload})
                 render json: {"object-id": store[:id], "collection-id": col_id},
                        status: 200
             end
@@ -298,6 +301,7 @@ class ObjectsController < ApplicationController
         else
             retVal = data
         end
+        createEvent(col_id, CE_READ_OBJECT, "read object", {object_id: store["id"], read_meta: (show_meta.to_s == "TRUE")})
         render json: retVal.merge({"object-id" => store["id"]}),
                status: 200
     end
@@ -411,6 +415,8 @@ class ObjectsController < ApplicationController
             return
         end
         payload = pl[:data]
+        createEvent(meta["collection-id"], CE_READ_PAYLOAD, "read payload", {object_id: id, payload_dri: payload_dri})
+
         render json: payload,
                status: 200
     end
@@ -507,6 +513,7 @@ class ObjectsController < ApplicationController
                        status: 500
             end
         else
+            createEvent(col_id, CE_DELETE_OBJECT, "delete object", {object_id: id})
             render json: {"object-id": store[:id], "collection-id": col_id},
                    status: 200
         end
