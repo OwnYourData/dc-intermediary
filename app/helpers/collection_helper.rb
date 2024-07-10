@@ -19,17 +19,18 @@ module CollectionHelper
         end
     end
 
-    def createEvent(collection_id, event_type, event, event_object)
-puts "in createEvent"
-puts "collection_id: " + collection_id.to_s
+    def createEvent(collection_id, event_type, event, event_object, user_id)
         @ce = CollectionEvent.new
         @ce.collection_id = collection_id
-        @ce.user_id = doorkeeper_user
+        if user_id.nil?
+            @ce.user_id = doorkeeper_user
+        else
+            @ce.user_id = user_id
+        end
         @ce.timestamp = DateTime.now
         @ce.event_type = event_type
         @ce.event_object = event_object.to_json
         @ce.event = event
         retVal = @ce.save
-puts "retVal: " + retVal.to_s
     end
 end

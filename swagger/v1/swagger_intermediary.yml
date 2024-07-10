@@ -1,24 +1,927 @@
 openapi: 3.0.1
 info:
-  title: NGI ONTOCHAIN GatewayAPI V1 Docs
+  title: Data Intermediary Docs
   description: >-
-    API Endpoints for GatewayAPI component (project "Babelfish") in NGI ONTOCHAIN environment.
+    API Endpoints for data intermediary component.
   contact:
     email: office@ownyourdata.eu
   license:
     name: MIT License
     url: 'https://opensource.org/licenses/MIT'
-  version: v1
+  version: v1.0
 servers:
+  - description: DPP-CRC Instance
+    url: https://concrete.go-data.at
   - url: /
+components:
+  securitySchemes:
+    oAuth2:
+      type: http
+      scheme: bearer
+      description: |
+        retrieve bearer token with:<br> 
+        <code>curl -d grant_type=client_credentials -d client_id=$APP_KEY -d client_secret=$APP_SECRET -d scope=$SCOPE -X POST $HOST/oauth/token</code>
+
 paths:
+
+# Service Discovery APIs
   /list:
     get:
-      summary: obtain a list of all available services
+      tags:
+        - Service Catalogue
+      summary: retrieve service catalogue list
+      description: Obtain a paged list of all available services, the filter can contain every field from the resource description schema.
+      parameters:
+        - name: page
+          description: Selected page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: items
+          description: Number of items per page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: success
+          description: An array of JSON objects representing services matching the query.
           content:
             application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '500':
           description: Server error
+  /service/search:
+    get:
+      tags:
+        - Service Catalogue
+      summary: query service catalogue
+      description: Obtain a list of services which name or description match the provided search terms.
+      parameters:
+        - name: query
+          in: query
+          description: Dynamic query parameters
+          required: false
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: An array of JSON objects representing services matching the query.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '500':
+          description: Server error
+  /service:
+    post:
+      tags:
+        - Service Catalogue
+      summary: create service description
+      description: Provide details of a service description.
+      requestBody:
+        description: JSON object with service description
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schema:
+                  type: object
+                data:
+                  type: object
+                  nullable: true
+                governance:
+                  type: object
+                  nullable: true
+            example:
+              interface:
+                info:
+                  title: "DID Lint"
+                servers:
+                  - url: "https://didlint.ownyourdata.eu"
+                party: "data_consumer"
+                paths:
+                  /api/validate:
+                    post:
+                      requestBody:
+                        content:
+                          application/json:
+                            schema: {}
+              data: null
+              governance: null
+      responses:
+        '200':
+          description: JSON object with name of the service and assigned service-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service_id:
+                    type: integer
+                  name:
+                    type: string
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+  /service/{service_id}:
+    get:
+      tags:
+        - Service Catalogue
+      summary: read service description
+      description: Obtain details of a service description.
+      parameters:
+        - name: service_id
+          in: path
+          description: numerical identifier of the service
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with service description
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: service not found
+        '500':
+          description: Server error
+    put:
+      tags:
+        - Service Catalogue
+      summary: update service description
+      description: Provide details of a service description and update on the configured storage.
+      parameters:
+        - name: service_id
+          in: path
+          description: numerical identifier of the service
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: JSON object with service description
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                interface:
+                  type: object
+                  properties:
+                    schema:
+                      type: object
+                data:
+                  type: object
+                  nullable: true
+                governance:
+                  type: object
+                  nullable: true
+            example:
+              interface:
+                info:
+                  title: "DID Lint"
+                servers:
+                  - url: "https://didlint.ownyourdata.eu"
+                party: "data_consumer"
+                paths:
+                  /api/validate:
+                    post:
+                      requestBody:
+                        content:
+                          application/json:
+                            schema:
+                              type: object
+              data: null
+              governance: null
+      responses:
+        '200':
+          description: JSON object with name of the service and assigned service-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service_id:
+                    type: integer
+                  name:
+                    type: string
+        '401':
+          description: not authorized
+        '404':
+          description: service not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+    delete:
+      tags:
+        - Service Catalogue
+      summary: delete service description
+      description: Mark service as deleted.
+      parameters:
+        - name: service_id
+          in: path
+          description: numerical identifier of the service
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with name of the service and assigned service-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service_id:
+                    type: integer
+                  name:
+                    type: string
+        '400':
+          description: cannot delete
+        '401':
+          description: not authorized
+        '404':
+          description: service not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+# Organisation Accounts APIs
+  /organization/current:
+    get:
+      tags:
+        - Organisation Accounts
+      summary: read current organization
+      description: Obtain details of the current organization based on the provided Bearer Token.
+      responses:
+        '200':
+          description: JSON object with current organization details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id:
+                    type: integer
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  address:
+                    type: string
+              example:
+                organization_id: 1
+                name: "ACME Inc."
+                description: "Information about the organization"
+                address: "123 Main St, City, Country"
+        '401':
+          description: not authorized
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /organization/:
+    post:
+      tags:
+        - Organisation Accounts
+      summary: create organization
+      description: Persist details of an organization.
+      requestBody:
+        description: JSON object with organization details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                address:
+                  type: string
+            example:
+              name: "ACME Inc."
+              description: "Information about the organization"
+              address: "123 Main St, City, Country"
+      responses:
+        '200':
+          description: JSON object with name of the organization and assigned organization-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                organization_id: 1
+                name: "ACME Inc."
+        '401':
+          description: not authorized
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /organization/{organization_id}:
+    get:
+      tags:
+        - Organisation Accounts
+      summary: read organization
+      description: Obtain details of an organization.
+      parameters:
+        - name: organization_id
+          in: path
+          description: numerical identifier of the organization
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with organization details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id:
+                    type: integer
+                  name:
+                    type: string
+                  address:
+                    type: string
+                  contact_email:
+                    type: string
+                  phone_number:
+                    type: string
+              example:
+                organization-id: 1
+                name: "ACME Inc."
+                description: "information about organisation"
+                address: "street number, zip code, city, country"
+        '401':
+          description: not authorized
+        '404':
+          description: organisation not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+    put:
+      tags:
+        - Organisation Accounts
+      summary: update organization
+      description: Provide details of an organization for an update.
+      parameters:
+        - name: organization_id
+          in: path
+          description: numerical identifier of the organization
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: JSON object with organization details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                address:
+                  type: string
+            example:
+              name: "ACME Inc."
+              description: "Updated information about the organization"
+              address: "123 Main St, City, Country"
+      responses:
+        '200':
+          description: JSON object with name of the organization and assigned organization-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                organization-id: 1
+                name: "ACME Inc."
+        '401':
+          description: not authorized
+        '404':
+          description: organisation not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+    delete:
+      tags:
+        - Organisation Accounts
+      summary: delete organization
+      description: Mark organization as deleted.
+      parameters:
+        - name: organization_id
+          in: path
+          description: Numerical identifier of the organization
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with name of the organization and assigned organization-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                organization_id: 1
+                name: "ACME Inc."
+        '401':
+          description: not authorized
+        '404':
+          description: organisation not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /organization/{organization_id}/list:
+    get:
+      tags:
+        - Organisation Accounts
+      summary: retrieve user list for organization
+      description: Obtain a list of users for the given organization.
+      parameters:
+        - name: organization_id
+          in: path
+          description: numerical identifier of the organization
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: An array of JSON objects representing users of the organization.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    user-id:
+                      type: integer
+                    name:
+                      type: string
+              example:
+                - user-id: 1
+                  name: "John Doe"
+                - user-id: 2
+                  name: "Jane Smith"
+        '401':
+          description: not authorized
+        '404':
+          description: organisation not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /organization/{organization_id}/meta:
+    get:
+      tags:
+        - Organisation Accounts
+      summary: read organization metadata
+      description: Obtain metadata of an organization.
+      parameters:
+        - name: organization_id
+          in: path
+          description: numerical identifier of the organization
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with organization metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization_id:
+                    type: integer
+                  name:
+                    type: string
+                  metadata:
+                    type: object
+                    # Define metadata fields as needed
+              example:
+                type: "organization"
+                organization-id: 1
+                dri: "zQmPSrfCycwUm7a4ufuUdARKFTqyBH946Rh8bADufvw8SzJ"
+                created-at: "2024-07-02T21:55:34.573Z"
+                updated-at: "2024-07-02T21:55:34.573Z"
+        '401':
+          description: not authorized
+        '404':
+          description: organisation not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+# User Management APIs
+  /user/current:
+    get:
+      tags:
+        - User Management
+      summary: read current user
+      description: Obtain details of the current user based on the provided Bearer Token.
+      responses:
+        '200':
+          description: JSON object with current user details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-id:
+                    type: integer
+                  name:
+                    type: string
+                  organization-id:
+                    type: integer
+              example:
+                user-id: 2
+                name: "John Doe"
+                organization-id: 1
+        '401':
+          description: not authorized
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /user:
+    post:
+      tags:
+        - User Management
+      summary: create user
+      description: Persist details of a user.
+      requestBody:
+        description: JSON object with user details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                organization-id:
+                  type: integer
+            example:
+              name: "John Doe"
+              email: "john@doe.com"
+              phone: "(555) 123 4567"
+              organization-id: 1
+      responses:
+        '200':
+          description: JSON object with name of the user and assigned user-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                user-id: 2
+                name: "John Doe"
+                organization-id: 1
+        '401':
+          description: not authorized
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /user/{user_id}:
+    get:
+      tags:
+        - User Management
+      summary: read user
+      description: Obtain details of a user.
+      parameters:
+        - name: user_id
+          in: path
+          description: numerical identifier of the user
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with user details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  phone:
+                    type: string
+                  organization_id:
+                    type: integer
+              example:
+                user-id: 1
+                name: "John Doe"
+                email: "john@doe.com"
+                phone: "(555) 123 4567"
+                organization-id: 1
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+    put:
+      tags:
+        - User Management
+      summary: update user
+      description: Update details of a user.
+      parameters:
+        - name: user_id
+          in: path
+          description: numerical identifier of the user
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: JSON object with user details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                organization-id:
+                  type: integer
+            example:
+              name: "John Doe Jr."
+              email: "john_jr@doe.com"
+              phone: "(555) 123 4568"
+              organization-id: 1
+      responses:
+        '200':
+          description: JSON object with name of the user and assigned user-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-id:
+                    type: integer
+                  name:
+                    type: string
+                  organization-id:
+                    type: integer
+              example:
+                user_id: 2
+                name: "John Doe"
+                organization-id: 1
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+        
+    delete:
+      tags:
+        - User Management
+      summary: delete user
+      description: Mark user as deleted and remove all personally identifiable information.
+      parameters:
+        - name: user_id
+          in: path
+          description: numerical identifier of the user
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with name of the user and assigned user-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-id:
+                    type: integer
+                  name:
+                    type: string
+                  organization-id:
+                    type: integer
+              example:
+                user_id: 2
+                name: "John Doe"
+                organization-id: 1
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /user/{user_id}/wallet:
+    get:
+      tags:
+        - User Management
+      summary: read user wallet
+      description: Obtain wallet details of a user.
+      parameters:
+        - name: user_id
+          in: path
+          description: numerical identifier of the user
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with user wallet details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-id:
+                    type: integer
+                  oauth:
+                    type: object
+                    properties:
+                      client_id:
+                        type: string
+                      client_secret:
+                        type: string
+                  dlt:
+                    type: array
+                    items: 
+                      type: object
+              example:
+                user_id: 1
+                oauth:
+                  client_id: "123..."
+                  client_secret: "abc..."
+                dlt:
+                  - type: "Convex"
+                    network: "testnet"
+                    address: 37548
+                    public_key: "0x82A..."
+                    balance: 96816794
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /user/{user_id}/meta:
+    get:
+      tags:
+        - User Management
+      summary: read user metadata
+      description: Obtain metadata of a user.
+      parameters:
+        - name: user_id
+          in: path
+          description: numerical identifier of the user
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with metadata of the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-id:
+                    type: integer
+                  type:
+                    type: string
+                  dri:
+                    type: string
+                  created-at:
+                    type: string
+                    format: date-time
+                  updated-at:
+                    type: string
+                    format: date-time
+              example:
+                type: "user"
+                user-id: 1
+                dri: "zQmPSrfCycwUm7a4ufuUdARKFTqyBH946Rh8bADufvw8SzJ"
+                created-at: "2024-07-02T21:55:34.573Z"
+                updated-at: "2024-07-02T21:55:34.573Z"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+# Storage APIs
+  /collection/list:
+    get:
+      tags:
+        - Storage
+      summary: retrieve collection list
+      description: Retrieve a list of all accessible collections and their corresponding details.
+      responses:
+        '200':
+          description: An array of JSON objects representing the collection ID and name of the collection.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    collection_id:
+                      type: integer
+                    name:
+                      type: string
+              example:
+                - collection-id: 1
+                  name: "My Repository"
+                - collection_id: 2
+                  name: "Repository Two"
+        '401':
+          description: Not authorized
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []

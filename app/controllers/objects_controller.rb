@@ -3,6 +3,7 @@ class ObjectsController < ApplicationController
     include IntermediaryHelper
     include CollectionHelper
     include StorageHelper
+    include ObjectHelper
 
     before_action -> { doorkeeper_authorize! :write, :admin }, only: [:create, :write, :update, :delete]
     before_action -> { doorkeeper_authorize! :read, :write, :admin }, only: [:read, :object, :access]
@@ -12,65 +13,11 @@ class ObjectsController < ApplicationController
         if !data["_json"].nil?
             data = data["_json"]
         end
-        meta = {
-            "type": "object",
-            "organization-id": doorkeeper_org,
-            "delete": false
-        }
-        if !data["meta"].nil?
-            meta = meta.merge(data["meta"])
-            data = data.except("meta")
-        end
-        dri = Oydid.hash(Oydid.canonical({"data": data, "meta": meta}))
-        col_id = data["collection-id"] rescue ""
-        if col_id.to_s == ""
-            col_id = meta["collection-id"] rescue ""
-            if col_id.to_s == ""
-                render json: {"error": "missing 'collection-id'"},
-                       status: 400
-                return
-            else
-                meta["collection-id"] = col_id.to_s
-                data = data.except("collection-id")
-            end
-        else
-            meta["collection-id"] = col_id.to_s
-            data = data.except("collection-id")
-        end
-        # @col = Store.find(col_id) rescue nil
-        col = getCollection(col_id)
-        if col.nil?
-            render json: {"error": "invalid 'collection-id'"},
-                   status: 400
-            return
-        end
-        col_meta = col[:meta]
-        if col_meta["type"] != "collection"
-            render json: {"error": "invalid 'collection-id'"},
-                   status: 400
-            return
-        end
-        if col_meta["organization-id"].to_s != doorkeeper_org.to_s
-            render json: {"error": "Not authorized"},
-                   status: 401
-            return
-        end
 
-        store = getStorage_by_dri(dri)
-        # @store = Store.find_by_dri(dri)
-        if store.nil?
-            store = newStorage(col_id, data, meta, dri, "object_" + col_id.to_s)
-            # @store = Store.new(item: data.to_json, meta: meta.to_json, dri: dri, key: "object_" + col_id.to_s)
-            # @store.save
-        end
-        if store[:id].nil?
-            render json: {"error": store[:error].to_s},
-                   status: 500
-        else
-            createEvent(col_id, CE_CREATE_OBJECT, "create object", {object_id: store[:id], data: data, meta: meta})
-            render json: {"object-id": store[:id], "collection-id": col_id},
-                   status: 200
-        end
+        retVal, status = create_object(data, doorkeeper_org, doorkeeper_user)
+        render json: retVal,
+               status: status
+
     end
 
     def update
@@ -171,7 +118,7 @@ class ObjectsController < ApplicationController
                        status: 500
             end
         else
-            createEvent(col_id, CE_UPDATE_OBJECT, "update object", {object_id: store[:id], data: data, meta: meta})
+            createEvent(col_id, CE_UPDATE_OBJECT, "update object", {object_id: store[:id], data: data, meta: meta}, doorkeeper_user)
             render json: {"object-id": store[:id], "collection-id": col_id},
                    status: 200
         end
@@ -185,79 +132,11 @@ class ObjectsController < ApplicationController
         if !payload["_json"].nil?
             payload = payload["_json"]
         end
-        payload_dri = Oydid.hash(Oydid.canonical(payload.to_json))
-        # @store = Store.find(id)
-        store = getStorage_by_id(id)
-        if store.nil?
-            render json: {"error": "not found"},
-                   status: 404
-            return
-        end
 
-        # validate
-        data = store[:data].transform_keys(&:to_s) rescue store[:data]
-        meta = store[:meta].transform_keys(&:to_s)
-        if meta["type"] != "object"
-            render json: {"error": "not found"},
-                   status: 404
-            return
-        end
-        if meta["delete"].to_s.downcase == "true"
-            render json: {"error": "not found"},
-                   status: 404
-            return
-        end
-        if meta["organization-id"].to_s != doorkeeper_org.to_s
-            render json: {"error": "Not authorized"},
-                   status: 401
-            return
-        end
-        col_id = meta["collection-id"]
+        retVal, status = create_object(id, payload, doorkeeper_org, doorkeeper_user)
+        render json: retVal,
+               status: status
 
-        # store payload
-        pl_meta = {
-            "type": "payload",
-            "collection-id": col_id,
-            "organization-id": doorkeeper_org
-        }
-        if data["payload"].to_s == ""
-            pl = newStorage(col_id, payload, pl_meta, payload_dri, nil)
-            # @pl = Store.new(item: payload.to_json, meta: pl_meta.to_json, dri: payload_dri)
-        else
-            pl = getStorage_by_dri(payload_dri)
-            # @pl = Store.find_by_dri(payload_dri)
-            if pl.nil?
-                pl = newStorage(col_id, payload, pl_meta, payload_dri, nil)
-            else
-                pl = updateStorage(col_id, pl[:id], payload, pl_meta, payload_dri, nil)
-            end
-        end
-        if pl[:id].nil?
-            if pl[:error].to_s == ""
-                render json: {"error": "cannot save payload"},
-                       status: 500
-            else
-                render json: {"error": pl[:error]},
-                       status: 500
-            end
-        else
-            data["payload"] = payload_dri
-            dri = Oydid.hash(Oydid.canonical({"data": data, "meta": meta}))
-            update_store = updateStorage(col_id, store[:id], data, meta, dri, "object_" + col_id.to_s)
-            if update_store[:id].nil?
-                if update_store[:error].to_s == ""
-                    render json: {"error": "cannot save update to payload"},
-                           status: 500
-                else
-                    render json: {"error": update_store[:error]},
-                           status: 500
-                end
-            else
-                createEvent(col_id, CE_WRITE_PAYLOAD, "write payload", {object_id: store[:id], payload_dri: payload_dri, payload: payload})
-                render json: {"object-id": store[:id], "collection-id": col_id},
-                       status: 200
-            end
-        end
     end
 
     def read
@@ -301,7 +180,7 @@ class ObjectsController < ApplicationController
         else
             retVal = data
         end
-        createEvent(col_id, CE_READ_OBJECT, "read object", {object_id: store["id"], read_meta: (show_meta.to_s == "TRUE")})
+        createEvent(col_id, CE_READ_OBJECT, "read object", {object_id: store["id"], read_meta: (show_meta.to_s == "TRUE")}, doorkeeper_user)
         render json: retVal.merge({"object-id" => store["id"]}),
                status: 200
     end
@@ -415,7 +294,7 @@ class ObjectsController < ApplicationController
             return
         end
         payload = pl[:data]
-        createEvent(meta["collection-id"], CE_READ_PAYLOAD, "read payload", {object_id: id, payload_dri: payload_dri})
+        createEvent(meta["collection-id"], CE_READ_PAYLOAD, "read payload", {object_id: id, payload_dri: payload_dri}, doorkeeper_user)
 
         render json: payload,
                status: 200
@@ -513,7 +392,7 @@ class ObjectsController < ApplicationController
                        status: 500
             end
         else
-            createEvent(col_id, CE_DELETE_OBJECT, "delete object", {object_id: id})
+            createEvent(col_id, CE_DELETE_OBJECT, "delete object", {object_id: id}, doorkeeper_user)
             render json: {"object-id": store[:id], "collection-id": col_id},
                    status: 200
         end

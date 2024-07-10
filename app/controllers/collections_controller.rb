@@ -27,7 +27,7 @@ class CollectionsController < ApplicationController
         if @store.nil?
             @store = Store.new(item: data.to_json, meta: meta.to_json, dri: dri, key: "col_" + doorkeeper_org)
             if @store.save
-                createEvent(@store.id, CE_CREATE_COLLECTION, "create collection", {data: data, meta: meta})
+                createEvent(@store.id, CE_CREATE_COLLECTION, "create collection", {data: data, meta: meta}, doorkeeper_user)
                 retVal = {"collection-id": @store.id, "name": data["name"].to_s}
                 render json: retVal,
                        status: 200
@@ -88,7 +88,7 @@ class CollectionsController < ApplicationController
             @store.meta = meta.to_json
             @store.dri = dri
             if @store.save
-                createEvent(@store.id, CE_UPDATE_COLLECTION, "update collection", {data: data, meta: meta})
+                createEvent(@store.id, CE_UPDATE_COLLECTION, "update collection", {data: data, meta: meta}, doorkeeper_user)
                 render json: {"collection-id": @store.id},
                        status: 200
             else
@@ -283,7 +283,7 @@ class CollectionsController < ApplicationController
         @store.meta = meta.to_json
         @store.dri = nil
         if @store.save
-            createEvent(@store.id, CE_DELETE_COLLECTION, "delete collection", {name: data["name"].to_s})
+            createEvent(@store.id, CE_DELETE_COLLECTION, "delete collection", {name: data["name"].to_s}, doorkeeper_user)
             render json: {"collection-id": @store.id, "name": data["name"].to_s},
                    status: 200
         else
@@ -391,7 +391,7 @@ class CollectionsController < ApplicationController
         @ca.data_agreement = d3a
         @ca.save
 
-        createEvent(collection_id, CE_ACCESS_COLLECTION, "create collection access", {organization_id: doorkeeper_org.to_i, data_agreement: d3a})
+        createEvent(collection_id, CE_ACCESS_COLLECTION, "create collection access", {organization_id: doorkeeper_org.to_i, data_agreement: d3a}, doorkeeper_user)
 
         render json: {"collection-access-id": @ca.id},
                status: 200
@@ -411,7 +411,7 @@ class CollectionsController < ApplicationController
             return
         end
         if @ca.destroy
-            createEvent(collection_id, CE_ACCESS_COLLECTION, "delete collection access", {organization_id: doorkeeper_org.to_i})
+            createEvent(collection_id, CE_ACCESS_COLLECTION, "delete collection access", {organization_id: doorkeeper_org.to_i}, doorkeeper_user)
             render json: {"collection-access-id": id},
                    status: 200
         else
