@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Data Intermediary Docs
+  title: Data Intermediary APIs
   description: >-
     API Endpoints for data intermediary component.
   contact:
@@ -131,7 +131,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  service_id:
+                  service-id:
                     type: integer
                   name:
                     type: string
@@ -219,7 +219,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  service_id:
+                  service-id:
                     type: integer
                   name:
                     type: string
@@ -251,7 +251,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  service_id:
+                  service-id:
                     type: integer
                   name:
                     type: string
@@ -290,7 +290,7 @@ paths:
                   address:
                     type: string
               example:
-                organization_id: 1
+                organization-id: 1
                 name: "ACME Inc."
                 description: "Information about the organization"
                 address: "123 Main St, City, Country"
@@ -338,7 +338,7 @@ paths:
                   name:
                     type: string
               example:
-                organization_id: 1
+                organization-id: 1
                 name: "ACME Inc."
         '401':
           description: not authorized
@@ -469,7 +469,7 @@ paths:
                   name:
                     type: string
               example:
-                organization_id: 1
+                organization-id: 1
                 name: "ACME Inc."
         '401':
           description: not authorized
@@ -508,9 +508,9 @@ paths:
                     name:
                       type: string
               example:
-                - user-id: 1
-                  name: "John Doe"
                 - user-id: 2
+                  name: "John Doe"
+                - user-id: 3
                   name: "Jane Smith"
         '401':
           description: not authorized
@@ -678,7 +678,7 @@ paths:
                   organization_id:
                     type: integer
               example:
-                user-id: 1
+                user-id: 2
                 name: "John Doe"
                 email: "john@doe.com"
                 phone: "(555) 123 4567"
@@ -740,7 +740,7 @@ paths:
                   organization-id:
                     type: integer
               example:
-                user_id: 2
+                user-id: 2
                 name: "John Doe"
                 organization-id: 1
         '401':
@@ -779,7 +779,7 @@ paths:
                   organization-id:
                     type: integer
               example:
-                user_id: 2
+                user-id: 2
                 name: "John Doe"
                 organization-id: 1
         '401':
@@ -826,7 +826,7 @@ paths:
                     items: 
                       type: object
               example:
-                user_id: 1
+                user-id: 2
                 oauth:
                   client_id: "123..."
                   client_secret: "abc..."
@@ -880,7 +880,7 @@ paths:
                     format: date-time
               example:
                 type: "user"
-                user-id: 1
+                user-id: 2
                 dri: "zQmPSrfCycwUm7a4ufuUdARKFTqyBH946Rh8bADufvw8SzJ"
                 created-at: "2024-07-02T21:55:34.573Z"
                 updated-at: "2024-07-02T21:55:34.573Z"
@@ -915,12 +915,538 @@ paths:
                     name:
                       type: string
               example:
-                - collection-id: 1
+                - collection-id: 3
                   name: "My Repository"
-                - collection_id: 2
+                - collection_id: 5
                   name: "Repository Two"
         '401':
           description: Not authorized
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /collection:
+    post:
+      tags:
+        - Storage
+      summary: create collection
+      description: Persist details of a collection.
+      requestBody:
+        description: JSON object with collection details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+            example:
+              name: "My Repository"
+      responses:
+        '200':
+          description: JSON object with name of the collection and assigned collection-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection_id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                collection_id: 3
+                name: "My Repository"
+        '401':
+          description: Not authorized
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /collection/{collection_id}:
+    get:
+      tags:
+        - Storage
+      summary: read collection
+      description: Obtain details of a collection.
+      parameters:
+        - name: collection_id
+          in: path
+          description: numerical identifier of the collection
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with collection details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection-id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                collection-id: 3
+                name: "My Repository"
+                storage:
+                  type: "Semantic Container"
+                  url: "https://eeg.go-data.at"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+    put:
+      tags:
+        - Storage
+      summary: update collection
+      description: Update details of a collection.
+      parameters:
+        - name: collection_id
+          in: path
+          description: numerical identifier of the collection
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: JSON object with collection details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+            example:
+              name: "My Repository"
+      responses:
+        '200':
+          description: JSON object with name of the collection and assigned collection-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection-id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                collection-id: 3
+                name: "My Repository"
+                storage:
+                  type: "Semantic Container"
+                  url: "https://eeg.go-data.at"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+    delete:
+      tags:
+        - Storage
+      summary: delete collection
+      description: Mark collection as deleted.
+      parameters:
+        - name: collection_id
+          in: path
+          description: numerical identifier of the collection
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with name of the collection and assigned collection-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection-id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                collection-id: 3
+                name: "My Repository"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /collection/{collection_id}/meta:
+    get:
+      tags:
+        - Storage
+      summary: read collection metadata
+      description: Obtain metadata of a collection.
+      parameters:
+        - name: collection_id
+          in: path
+          description: numerical identifier of the collection
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with collection metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collection_id:
+                    type: integer
+                  type:
+                    type: string
+                  dri:
+                    type: string
+                  created-at:
+                    type: string
+                    format: date-time
+                  updated-at:
+                    type: string
+                    format: date-time
+              example:
+                type: "collection"
+                collection-id: 3
+                dri: "zQmPSrfCycwUm7a4ufuUdARKFTqyBH946Rh8bADufvw8SzJ"
+                created-at: "2024-07-02T21:55:34.573Z"
+                updated-at: "2024-07-02T21:55:34.573Z"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /object:
+    post:
+      tags:
+        - Storage
+      summary: create object (metadata)
+      description: Persist details of an object.
+      requestBody:
+        description: JSON object with object metadata
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                collection-id:
+                  type: integer
+            example:
+              name: "My Object"
+              collection-id: 3
+      responses:
+        '200':
+          description: JSON object with name of the object and assigned object-id & collection-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object_id:
+                    type: integer
+                  collection_id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                object_id: 4
+                collection_id: 3
+                name: "My Object"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /object/{object_id}:
+    get:
+      tags:
+        - Storage
+      summary: read object (metadata)
+      description: Obtain details related to an object.
+      parameters:
+        - name: object_id
+          in: path
+          description: numerical identifier of the object
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with object details (metadata)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object-id:
+                    type: integer
+                  collection-id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                object-id: 4
+                collection-id: 3
+                name: "My Object"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+        
+    put:
+      tags:
+        - Storage
+      summary: update object (metadata)
+      description: Update details of an object.
+      parameters:
+        - name: object_id
+          in: path
+          description: numerical identifier of the object
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: JSON object with object metadata
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                collection-id:
+                  type: integer
+            example:
+              name: "My Object"
+              collection-id: 3
+      responses:
+        '200':
+          description: JSON object with name of the object and assigned object-id & collection-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object_id:
+                    type: integer
+                  collection_id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                object-id: 4
+                collection-id: 3
+                name: "My Object"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+    delete:
+      tags:
+        - Storage
+      summary: delete object
+      description: Mark object as deleted.
+      parameters:
+        - name: object_id
+          in: path
+          description: numerical identifier of the object
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with name of the object and assigned object-id & collection-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object_id:
+                    type: integer
+                  collection_id:
+                    type: integer
+                  name:
+                    type: string
+              example:
+                object-id: 4
+                collection-id: 3
+                name: "My Object"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /object/{object_id}/write:
+    put:
+      tags:
+        - Storage
+      summary: write object (object itself)
+      description: Persist object.
+      parameters:
+        - name: object_id
+          in: path
+          description: numerical identifier of the object
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: JSON object (object itself)
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+            example: 
+              - "payload"
+      responses:
+        '200':
+          description: JSON object with name of the object and assigned object-id & collection-id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object_id:
+                    type: integer
+                  collection_id:
+                    type: integer
+              example:
+                object_id: 4
+                collection_id: 3
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /object/{object_id}/read:
+    get:
+      tags:
+        - Storage
+      summary: read object (object itself)
+      description: Obtain the object itself.
+      parameters:
+        - name: object_id
+          in: path
+          description: numerical identifier of the object
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object (object itself)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+              example:
+                - "payload"
+        '401':
+          description: not authorized
+        '404':
+          description: not found
+        '500':
+          description: Server error
+      security:
+        - oAuth2: []
+
+  /object/{object_id}/{user_id}:
+    get:
+      tags:
+        - Storage
+      summary: check object access
+      description: Check the access control for a particular user to access a particular object.
+      parameters:
+        - name: object_id
+          in: path
+          description: numerical identifier of the object
+          required: true
+          schema:
+            type: integer
+        - name: user_id
+          in: path
+          description: numerical identifier of the user
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: JSON object with name of the object, assigned collection-id, object-id, and object access information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object-id:
+                    type: integer
+                  collection-id:
+                    type: integer
+                  name:
+                    type: string
+                  access:
+                    type: boolean
+              example:
+                object-id: 4
+                collection-id: 3
+                name: "My Object"
+                access: true
+        '401':
+          description: not authorized
+        '404':
+          description: not found
         '500':
           description: Server error
       security:
